@@ -1,0 +1,10 @@
+tool 1: get_unique_dimension_values 
+Description: The get_unique_dimension_values function is specifically designed to extract and return a list of unique items from a designated column, also referred to as a dimension, from table 'procedures'. 
+Parameters:
+dimension_name (str): This parameter specifies the name of the column or dimension from which the function will retrieve the unique values. It is a string that directly corresponds to the column name in the database.
+
+tool 2 : get_metric_values 
+Description: The get_metric_values function is designed to extract aggregated metric values based on a specified type of aggregation from table 'procedures'. 
+Parameters:
+metric_name (str): This parameter specifies the name of the metric that the function will aggregate. It is a string that identifies which data column to apply the aggregation to. 
+aggregation_type (str): This parameter determines the type of aggregation to be performed. It is a string that can take values like 'sum', 'average', 'count', etc., depending on the desired method of summarizing the metric data.

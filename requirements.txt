@@ -1,0 +1,7 @@
+langchain_community
+chromadb
+langchain
+langgraph
+pandas
+unstructured
+psutil
