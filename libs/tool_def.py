@@ -1,7 +1,11 @@
 # Import things that are needed generically
-from langchain.pydantic_v1 import BaseModel, Field
+from langchain.pydantic_v1 import BaseModel, Field, StrictStr
 from langchain.tools import BaseTool, StructuredTool, tool
 import sqlite3
+import re
+
+def contains_non_alpha(string: str):
+    return bool(re.search(r"[^a-zA-Z]", string))
 
 
 
@@ -13,9 +17,9 @@ class MetricsSearchInput(BaseModel):
     aggregation_type: str = Field(description="type of aggreation. sum or avg")
 
 @tool("get_unique_dimension_values", args_schema=DimSearchInput, return_direct=False)
-def get_unique_dimension_values(dimension: str):
+def get_unique_dimension_values(dimension: str) -> str:
     """
-    Retrieves a list of unique items from the specified column (dimension) from 'procedures' table.
+    Retrieves a list of unique items from the specified column from 'procedures' table.
     
     Parameters:
     dimension (str): The name of the column from which to retrieve unique values.
@@ -24,6 +28,9 @@ def get_unique_dimension_values(dimension: str):
     str: A comma-separated list of unique values from the specified column.
     """
     print("Running get_unique_dimension_values")
+    if contains_non_alpha(dimension):
+        return f"{dimension} is not well formatted. remove extra quotes"
+    
     try:
         # Establish a connection to the SQLite database
         conn = sqlite3.connect('./database/example.db')
@@ -40,12 +47,12 @@ def get_unique_dimension_values(dimension: str):
         # Close the connection
         conn.close()
         
-        return {'response':f'The distinct {dimension}`s are ' + ', '.join(unique_values)}
+        return f'The distinct {dimension}`s are ' + ', '.join(unique_values)
     except Exception as e:
-        return{'response':f"An error occurred: {e}"} 
+        return f"An error occurred: {e}"
 
 @tool("get_metric_values", args_schema=MetricsSearchInput, return_direct=False)
-def get_metric_values(metric: str, aggregation_type):
+def get_metric_values(metric: str, aggregation_type) -> str:
     """
     Retrieves an aggregated value of the specified metric from 'procedures' table.
     
@@ -73,6 +80,6 @@ def get_metric_values(metric: str, aggregation_type):
         # Close the connection
         conn.close()
         
-        return {'response':str(aggregated_value)}
+        return f"The aggregated values are {aggregated_value}"
     except Exception as e:
-        return{'response':f"An error occurred: {e}"} 
+        return f"An error occurred: {e}"
