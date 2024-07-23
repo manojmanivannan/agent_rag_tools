@@ -16,7 +16,7 @@ class MetricsSearchInput(BaseModel):
     metric: str = Field(description="name of the metric or column")
     aggregation_type: str = Field(description="type of aggreation. sum or avg")
 
-@tool("get_unique_dimension_values", args_schema=DimSearchInput, return_direct=False)
+@tool("get_unique_dimension_values", return_direct=False)
 def get_unique_dimension_values(dimension: str) -> str:
     """
     Retrieves a list of unique items from the specified column from 'procedures' table.
@@ -47,18 +47,18 @@ def get_unique_dimension_values(dimension: str) -> str:
         # Close the connection
         conn.close()
         
-        return f'The distinct {dimension}`s are ' + ', '.join(unique_values)
+        return f'The distinct {dimension}\'s are ' + ', '.join(unique_values)
     except Exception as e:
         return f"An error occurred: {e}"
 
-@tool("get_metric_values", args_schema=MetricsSearchInput, return_direct=False)
-def get_metric_values(metric: str, aggregation_type) -> str:
+@tool("get_metric_values", return_direct=False)
+def get_metric_values(metric: str, aggregation_type: str) -> str:
     """
     Retrieves an aggregated value of the specified metric from 'procedures' table.
     
     Parameters:
     metric (str): The name of the metric to aggregate.
-    aggregation_type (str): The type of aggregation to perform (e.g., 'sum', 'average').
+    aggregation_type (str): The type of aggregation to perform (e.g., sum, average, count, min or max).
     
     Returns:
     str: The aggregated value of the specified metric.
@@ -83,3 +83,14 @@ def get_metric_values(metric: str, aggregation_type) -> str:
         return f"The aggregated values are {aggregated_value}"
     except Exception as e:
         return f"An error occurred: {e}"
+    
+from langchain_core.pydantic_v1 import BaseModel, Field
+# Schema for structured response
+class ResponseSchema(BaseModel):
+    message: str = Field(description="The response to the query", required=True)
+
+
+@tool("final_response", args_schema=ResponseSchema, return_direct=True)
+def response_to_query(message: str):
+    """Tool which generates the response to the user query"""
+    return f"{message}"
