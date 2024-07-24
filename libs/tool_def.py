@@ -4,7 +4,7 @@ from typing import Dict, Any
 from enum import Enum
 from langchain.tools import BaseTool, StructuredTool, tool
 import sqlite3
-import re
+import re, json
 
 def contains_non_alpha(string: str):
     return bool(re.search(r"[^a-zA-Z]", string))
@@ -71,7 +71,7 @@ def get_unique_dimension_values(dimension: str) -> str:
     Returns:
     str: A comma-separated list of unique values from the specified column.
     """
-    print("Running get_unique_dimension_values")
+
     if contains_non_alpha(dimension):
         return f"{dimension} is not well formatted. remove extra quotes"
     
@@ -91,7 +91,7 @@ def get_unique_dimension_values(dimension: str) -> str:
         # Close the connection
         conn.close()
         
-        return {"response": f'The distinct {dimension}\'s are ' + ', '.join(unique_values)}
+        return ', '.join(unique_values)
     except Exception as e:
         raise Exception(e)
 
@@ -108,7 +108,6 @@ def get_metric_values(metric: str, aggregation_type: AggregationType, filter: Fi
     Returns:
     str: The aggregated value of the specified metric.
     """
-    print("Running get_metric_values")
     try:
         # Establish a connection to the SQLite database
         conn = sqlite3.connect('./database/example.db')
@@ -117,7 +116,6 @@ def get_metric_values(metric: str, aggregation_type: AggregationType, filter: Fi
         # Execute the query
         filter_sql = filter.to_sql()
         query = f"SELECT {aggregation_type.value}({metric}) FROM procedures {filter_sql}"
-        print(query)
         cursor.execute(query)
         
         # Fetch the result
@@ -127,7 +125,7 @@ def get_metric_values(metric: str, aggregation_type: AggregationType, filter: Fi
         # Close the connection
         conn.close()
         
-        return {"response": aggregated_value}
+        return aggregated_value
     except Exception as e:
         raise Exception(f"An error occurred: {e}")
     
