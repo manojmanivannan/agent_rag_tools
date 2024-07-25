@@ -1,6 +1,6 @@
 # Import things that are needed generically
 from langchain.pydantic_v1 import BaseModel, Field
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from enum import Enum
 from langchain.tools import BaseTool, StructuredTool, tool
 import sqlite3
@@ -96,14 +96,14 @@ def get_unique_dimension_values(dimension: str) -> str:
         raise Exception(e)
 
 @tool("get_metric_values", return_direct=False)
-def get_metric_values(metric: str, aggregation_type: AggregationType, filter: FilterCondition) -> str:
+def get_metric_values(metric: str, aggregation_type: AggregationType, filter: Optional[FilterCondition]) -> str:
     """
     Retrieves an aggregated value of the specified metric from 'procedures' table.
     
     Parameters:
     metric (str): The name of the metric to aggregate.
     aggregation_type (AggregationType): The type of aggregation to perform (e.g., sum, avg, count, min or max).
-    filter (FilterCondition): A dictionary of column-value pairs to filter the data.
+    filter (FilterCondition): An optional dictionary of column-value pairs to filter the data.
     
     Returns:
     str: The aggregated value of the specified metric.
