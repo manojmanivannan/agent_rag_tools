@@ -83,6 +83,7 @@ def get_unique_dimension_values(dimension: str) -> str:
         
         # Execute the query
         query = f"SELECT DISTINCT {dimension} FROM procedures"
+        print('Executing query: ',query)
         cursor.execute(query)
         
         # Fetch the results
@@ -109,10 +110,6 @@ def get_metric_values(metric: str, aggregation_type: AggregationType, filter: Op
     Returns:
     str: The aggregated value of the specified metric.
     """
-    print('Calling get metric values')
-    print(f'metric: {metric} - passed as {type(metric)}')
-    print(f'aggregation_type: {aggregation_type} - passed as {type(aggregation_type)}')
-    print(f'filter: {filter} - passed as {type(filter)}')
     try:
         # Establish a connection to the SQLite database
         conn = sqlite3.connect('./database/example.db')

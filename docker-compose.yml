@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   liteollama:
     build: .
@@ -19,5 +17,5 @@ services:
 volumes:
   ollama:
     external: true
-    name: ollama_restored
+    name: ollama
 
