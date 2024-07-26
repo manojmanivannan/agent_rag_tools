@@ -19,5 +19,5 @@ services:
 volumes:
   ollama:
     external: true
-    name: ollama
+    name: ollama_restored
 

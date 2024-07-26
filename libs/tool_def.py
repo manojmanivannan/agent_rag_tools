@@ -51,12 +51,13 @@ def get_available_columns() -> str:
         
         # Fetch the results
         results = cursor.fetchall()
-        unique_values = [row[0] for row in results]
+        unique_values = [row[1] for row in results]
+        
         
         # Close the connection
         conn.close()
         
-        return {"response": f'The table has ' + ', '.join(unique_values)}
+        return 'The columns are - "' + '"," '.join(unique_values) + '"'
     except Exception as e:
         raise Exception(e)
     
@@ -91,12 +92,12 @@ def get_unique_dimension_values(dimension: str) -> str:
         # Close the connection
         conn.close()
         
-        return ', '.join(unique_values)
+        return f'The unique {dimension} are - ' + ', '.join(unique_values)
     except Exception as e:
-        raise Exception(e)
+        raise Exception(f'No such column "{dimension}" in the database, are you sure about the string "{dimension}".') #use get_available_columns to find the correct column')
 
 @tool("get_metric_values", return_direct=False)
-def get_metric_values(metric: str, aggregation_type: AggregationType, filter: Optional[FilterCondition]) -> str:
+def get_metric_values(metric: str, aggregation_type: AggregationType, filter: Optional[Dict[str, str]] = None) -> str:
     """
     Retrieves an aggregated value of the specified metric from 'procedures' table.
     
@@ -108,14 +109,19 @@ def get_metric_values(metric: str, aggregation_type: AggregationType, filter: Op
     Returns:
     str: The aggregated value of the specified metric.
     """
+    print('Calling get metric values')
+    print(f'metric: {metric} - passed as {type(metric)}')
+    print(f'aggregation_type: {aggregation_type} - passed as {type(aggregation_type)}')
+    print(f'filter: {filter} - passed as {type(filter)}')
     try:
         # Establish a connection to the SQLite database
         conn = sqlite3.connect('./database/example.db')
         cursor = conn.cursor()
         
         # Execute the query
-        filter_sql = filter.to_sql()
-        query = f"SELECT {aggregation_type.value}({metric}) FROM procedures {filter_sql}"
+        filter_sql = FilterCondition(conditions=filter)
+        query = f"SELECT {aggregation_type.value}({metric}) FROM procedures {filter_sql.to_sql()}"
+        print('Executing query: ',query)
         cursor.execute(query)
         
         # Fetch the result
@@ -127,7 +133,7 @@ def get_metric_values(metric: str, aggregation_type: AggregationType, filter: Op
         
         return aggregated_value
     except Exception as e:
-        raise Exception(f"An error occurred: {e}")
+        raise Exception(e)
     
 
 
