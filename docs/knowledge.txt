@@ -8,3 +8,5 @@ Parameters:
 metric_name (str): This parameter specifies the name of the metric that the function will aggregate. It is a string that identifies which data column to apply the aggregation to. 
 aggregation_type (enum): This parameter determines the type of aggregation to be performed. It is a string that can take values like 'sum', 'average', 'count', etc., depending on the desired method of summarizing the metric data.
 filter optional(dictionary): optional filter to be added in the where clause.
+
+## get_available_columns is lists all available columns from the table. Needs no parameters as input.
