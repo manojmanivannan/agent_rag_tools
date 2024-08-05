@@ -1,4 +1,7 @@
 langchain_community
+langchain_ollama
+langchain_experimental
+langchain_openai
 chromadb
 langchain
 langgraph

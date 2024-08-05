@@ -1,22 +1,67 @@
 # Import things that are needed generically
-from langchain.pydantic_v1 import BaseModel, Field, StrictStr
+from langchain.pydantic_v1 import BaseModel, Field
+from typing import Dict, Any, Optional
+from enum import Enum
 from langchain.tools import BaseTool, StructuredTool, tool
 import sqlite3
-import re
+import re, json
 
 def contains_non_alpha(string: str):
     return bool(re.search(r"[^a-zA-Z]", string))
 
 
+class AggregationType(str, Enum):
+    AVG = "avg"
+    MAX = "max"
+    SUM = "sum"
+    COUNT = "count"
+    MIN = "min"
 
-class DimSearchInput(BaseModel):
-    dimension: str = Field(description="name of the dimension or column")
+class FilterCondition(BaseModel):
+    conditions: Dict[str, Any] = {}
 
-class MetricsSearchInput(BaseModel):
-    metric: str = Field(description="name of the metric or column")
-    aggregation_type: str = Field(description="type of aggreation. sum or avg")
+    def to_sql(self) -> str:
+        if not self.conditions:
+            return ""
+        
+        # Build the SQL WHERE clause with proper formatting
+        conditions_sql = []
+        for col, val in self.conditions.items():
+            try:
+                val = int(val)
+                conditions_sql.append(f"{col} = {val}")
+            except ValueError:
+                conditions_sql.append(f"{col} = '{val}'")
+        return " WHERE " + " AND ".join(conditions_sql)
 
-@tool("get_unique_dimension_values", args_schema=DimSearchInput, return_direct=False)
+
+@tool("get_available_columns")
+def get_available_columns() -> str:
+    """
+    Retrieves all the available columns from the 'procedures' table.
+    """
+    try:
+        # Establish a connection to the SQLite database
+        conn = sqlite3.connect('./database/example.db')
+        cursor = conn.cursor()
+        
+        # Execute the query
+        query = f"PRAGMA table_info(procedures)"
+        cursor.execute(query)
+        
+        # Fetch the results
+        results = cursor.fetchall()
+        unique_values = [row[1] for row in results]
+        
+        
+        # Close the connection
+        conn.close()
+        
+        return 'The columns are - "' + '"," '.join(unique_values) + '"'
+    except Exception as e:
+        raise Exception(e)
+    
+@tool("get_unique_dimension_values", return_direct=False)
 def get_unique_dimension_values(dimension: str) -> str:
     """
     Retrieves a list of unique items from the specified column from 'procedures' table.
@@ -27,7 +72,7 @@ def get_unique_dimension_values(dimension: str) -> str:
     Returns:
     str: A comma-separated list of unique values from the specified column.
     """
-    print("Running get_unique_dimension_values")
+
     if contains_non_alpha(dimension):
         return f"{dimension} is not well formatted. remove extra quotes"
     
@@ -38,6 +83,7 @@ def get_unique_dimension_values(dimension: str) -> str:
         
         # Execute the query
         query = f"SELECT DISTINCT {dimension} FROM procedures"
+        print('Executing query: ',query)
         cursor.execute(query)
         
         # Fetch the results
@@ -47,30 +93,32 @@ def get_unique_dimension_values(dimension: str) -> str:
         # Close the connection
         conn.close()
         
-        return f'The distinct {dimension}`s are ' + ', '.join(unique_values)
+        return f'The unique {dimension} are - ' + ', '.join(unique_values)
     except Exception as e:
-        return f"An error occurred: {e}"
+        raise Exception(f'No such column "{dimension}" in the database, are you sure about the string "{dimension}".') #use get_available_columns to find the correct column')
 
-@tool("get_metric_values", args_schema=MetricsSearchInput, return_direct=False)
-def get_metric_values(metric: str, aggregation_type) -> str:
+@tool("get_metric_values", return_direct=False)
+def get_metric_values(metric: str, aggregation_type: AggregationType, filter: Optional[Dict[str, str]] = None) -> str:
     """
     Retrieves an aggregated value of the specified metric from 'procedures' table.
     
     Parameters:
     metric (str): The name of the metric to aggregate.
-    aggregation_type (str): The type of aggregation to perform (e.g., 'sum', 'average').
+    aggregation_type (AggregationType): The type of aggregation to perform (e.g., sum, avg, count, min or max).
+    filter (FilterCondition): An optional dictionary of column-value pairs to filter the data.
     
     Returns:
     str: The aggregated value of the specified metric.
     """
-    print("Running get_metric_values")
     try:
         # Establish a connection to the SQLite database
         conn = sqlite3.connect('./database/example.db')
         cursor = conn.cursor()
         
         # Execute the query
-        query = f"SELECT {aggregation_type}({metric}) FROM procedures"
+        filter_sql = FilterCondition(conditions=filter)
+        query = f"SELECT {aggregation_type.value}({metric}) FROM procedures {filter_sql.to_sql()}"
+        print('Executing query: ',query)
         cursor.execute(query)
         
         # Fetch the result
@@ -80,6 +128,9 @@ def get_metric_values(metric: str, aggregation_type) -> str:
         # Close the connection
         conn.close()
         
-        return f"The aggregated values are {aggregated_value}"
+        return aggregated_value
     except Exception as e:
-        return f"An error occurred: {e}"
+        raise Exception(e)
+    
+
+
