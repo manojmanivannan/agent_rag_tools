@@ -8,3 +8,5 @@ langgraph
 pandas
 unstructured
 psutil
+neo4j
+sentence-transformers

@@ -21,7 +21,7 @@ from langchain_core.prompts import (
 # llm = ChatOllama(model='llama3', temperature=0)
 # llm.base_url = 'http://localhost:11434'
 
-model = ChatOllama(model="llama3")
+model = ChatOllama(model="llama3-groq-tool-use")
 model.base_url = 'http://localhost:11434'
 
 # prompt = hub.pull('hwchase17/react')
